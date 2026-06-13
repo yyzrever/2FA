@@ -9,7 +9,6 @@ body {
   width: 360px;
   background: #0d1117;
   color: #e6edf3;
-  min-height: 200px;
   position: relative;
 }
 
@@ -138,7 +137,26 @@ body {
 
 #list {
   padding: 4px 0;
-  overflow: visible;
+  max-height: 305px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#list::-webkit-scrollbar {
+  width: 4px;
+}
+
+#list::-webkit-scrollbar-track {
+  background: #0d1117;
+}
+
+#list::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 2px;
+}
+
+#list::-webkit-scrollbar-thumb:hover {
+  background: #484f58;
 }
 
 .card {
@@ -748,4 +766,39 @@ body {
   border-radius: 6px;
   padding: 7px 10px;
   line-height: 1.5;
+}
+
+.import-toast {
+  position: fixed;
+  bottom: 14px;
+  left: 12px;
+  right: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 9px 12px;
+  border-radius: 7px;
+  border: 1px solid;
+  line-height: 1.5;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 999;
+  pointer-events: none;
+}
+
+.import-toast.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.import-toast.success {
+  background: #0d2818;
+  border-color: #3fb950;
+  color: #3fb950;
+}
+
+.import-toast.error {
+  background: #2d0f0f;
+  border-color: #f85149;
+  color: #f85149;
 }
