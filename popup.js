@@ -172,6 +172,21 @@ function bindListEvents() {
   });
 }
 
+function showToast(msg, type = "success") {
+  const existing = document.getElementById("importToast");
+  if (existing) existing.remove();
+  const toast = document.createElement("div");
+  toast.id = "importToast";
+  toast.className = "import-toast " + type;
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.classList.add("visible"), 10);
+  setTimeout(() => {
+    toast.classList.remove("visible");
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
+}
+
 function bindFormEvents() {
   const addForm = document.getElementById("addForm");
 
@@ -320,6 +335,108 @@ function bindFormEvents() {
     a.href = URL.createObjectURL(blob);
     a.download = "2fa-backup.json";
     a.click();
+  });
+
+  document.getElementById("importFileInput").addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+
+    const text = await file.text().catch(() => null);
+    if (!text) { showToast("Could not read file.", "error"); return; }
+
+    const existingSecrets = new Set(accounts.map(a => a.secret));
+    const valid = [];
+    let skipped = 0;
+    let duplicates = 0;
+
+    // Validates that a string is a non-empty base32 secret
+    function isValidSecret(s) {
+      return typeof s === "string" && /^[A-Z2-7]+=*$/i.test(s) && s.length >= 8;
+    }
+
+    if (file.name.endsWith(".json")) {
+      let parsed;
+      try { parsed = JSON.parse(text); } catch (_) {
+        showToast("Invalid JSON file.", "error"); return;
+      }
+      if (!Array.isArray(parsed)) { showToast("JSON must be an array.", "error"); return; }
+
+      for (const entry of parsed) {
+        if (!entry || typeof entry !== "object" || Array.isArray(entry)) { skipped++; continue; }
+        const secret = (String(entry.secret || "")).trim().replace(/\s/g, "").toUpperCase();
+        const issuer = (String(entry.issuer || "")).trim().slice(0, 15);
+        const account = (String(entry.account || "")).trim().slice(0, 20);
+        if (!isValidSecret(secret)) { skipped++; continue; }
+        if (!issuer && !account) { skipped++; continue; }
+        if (existingSecrets.has(secret)) { duplicates++; continue; }
+        existingSecrets.add(secret);
+        valid.push({ issuer, account, secret });
+      }
+    } else {
+      // Extract all otpauth URIs — split on the scheme so wrapped lines aren't a problem
+      const uris = text.split(/(?=otpauth:\/\/)/).map(s => s.trim()).filter(s => s.startsWith("otpauth://"));
+
+      for (const line of uris) {
+        if (!line.startsWith("otpauth://totp")) { skipped++; continue; }
+
+        let params, labelRaw;
+        try {
+          const body = line.startsWith("otpauth://totp/")
+            ? line.slice("otpauth://totp/".length)
+            : line.slice("otpauth://totp".length).replace(/^\?/, "");
+
+          const q = body.indexOf("?");
+          labelRaw = q >= 0 ? body.slice(0, q) : "";
+          const paramStr = q >= 0 ? body.slice(q + 1) : body;
+          params = Object.fromEntries(new URLSearchParams(paramStr));
+        } catch (_) { skipped++; continue; }
+
+        const secret = (params.secret || "").trim().replace(/\s/g, "").toUpperCase();
+        if (!isValidSecret(secret)) { skipped++; continue; }
+
+        let issuer = (params.issuer || "").trim();
+        let account = "";
+
+        if (labelRaw) {
+          try {
+            const label = decodeURIComponent(labelRaw);
+            if (label.includes(":")) {
+              const parts = label.split(":");
+              if (!issuer) issuer = parts[0].trim();
+              account = parts.slice(1).join(":").trim();
+            } else {
+              account = label.trim();
+            }
+          } catch (_) {}
+        }
+
+        issuer = issuer.slice(0, 15);
+        account = account.slice(0, 20);
+
+        if (!issuer && !account) { skipped++; continue; }
+        if (existingSecrets.has(secret)) { duplicates++; continue; }
+        existingSecrets.add(secret);
+        valid.push({ issuer, account, secret });
+      }
+    }
+
+    if (!valid.length && !skipped && !duplicates) {
+      showToast("No valid accounts found in file.", "error"); return;
+    }
+
+    if (valid.length) {
+      accounts.push(...valid);
+      await saveData(accounts);
+      document.getElementById("list").innerHTML = "";
+      render();
+    }
+
+    const parts = [];
+    if (valid.length) parts.push(`${valid.length} imported`);
+    if (duplicates) parts.push(`${duplicates} already exist`);
+    if (skipped) parts.push(`${skipped} skipped`);
+    showToast(parts.join(" · "), valid.length ? "success" : "error");
   });
 
   document.getElementById("deleteModeBtn").addEventListener("click", () => {

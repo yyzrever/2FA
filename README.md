@@ -56,6 +56,7 @@ Your extension folder should contain:
   - **Scan QR tab** — upload a QR code image from your 2FA setup page; issuer, account, and secret are filled in automatically
 - Use the **search bar** to filter accounts by issuer or account name — results sort by best match as you type
 - Click **Copy** to copy a code to your clipboard
+- Click **Import** to load accounts from a `.json` backup or a `.txt` file of `otpauth://` URIs — duplicates and invalid secrets are skipped automatically
 - Click **Export** to save a backup of your accounts as a JSON file
 - Click **Delete** to enter delete mode — a red remove button appears on each card
 - Click **Donate** to support the project with crypto

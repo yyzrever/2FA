@@ -69,7 +69,10 @@
     </div>
 
     <div class="footer-actions">
-      <button id="exportBtn" class="btn-ghost">Export</button>
+      <div style="display:flex;gap:8px;">
+        <label id="importLabel" class="btn-ghost" style="cursor:pointer;">Import<input type="file" id="importFileInput" accept=".json,.txt" class="hidden" /></label>
+        <button id="exportBtn" class="btn-ghost">Export</button>
+      </div>
       <button id="deleteModeBtn" class="btn-ghost btn-danger">Delete</button>
     </div>
 
