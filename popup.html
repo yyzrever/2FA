@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>2FA Authenticator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div id="mainView">
+    <div class="header">
+      <div class="header-left">
+        <div class="logo">🛡️</div>
+        <div>
+          <div class="app-title">2FA Authenticator</div>
+          <div class="account-count" id="accountCount">0 accounts</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="timer-bar-wrap">
+      <div class="timer-bar-label">
+        <span>Codes refresh every 30s</span>
+        <span id="timerSeconds" class="timer-seconds">30s</span>
+      </div>
+      <div class="timer-track">
+        <div class="timer-fill" id="timerFill"></div>
+      </div>
+    </div>
+
+    <div class="search-wrap">
+      <div class="search-icon">🔍</div>
+      <input id="searchInput" class="search-input" placeholder="Search accounts..." />
+      <button id="searchClear" class="search-clear" hidden>✕</button>
+    </div>
+
+    <div id="list"></div>
+
+    <div class="add-section">
+      <div class="add-toggle" id="addToggle">+ Add account</div>
+      <div class="add-form" id="addForm">
+        <input id="issuer" placeholder="Issuer (e.g. Google)" maxlength="15" />
+        <input id="account" placeholder="Account (e.g. you@email.com)" maxlength="20" />
+
+        <div class="secret-tabs">
+          <button class="secret-tab active" id="tabType" type="button">Type</button>
+          <button class="secret-tab" id="tabScan" type="button">📷 Scan QR</button>
+        </div>
+
+        <div id="secretTypePane">
+          <input id="secret" placeholder="Secret key" />
+        </div>
+
+        <div id="secretScanPane" class="hidden">
+          <label class="qr-upload-label" id="qrUploadLabel">
+            <span id="qrUploadText">📂 Upload QR image</span>
+            <input type="file" id="qrFileInput" accept="image/*" class="hidden" />
+          </label>
+          <div id="qrStatus" class="qr-status hidden"></div>
+        </div>
+
+        <div id="formError" class="form-error hidden"></div>
+
+        <div class="form-actions">
+          <button id="addBtn" class="btn-primary">Add</button>
+          <button id="cancelBtn" class="btn-ghost">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-actions">
+      <button id="exportBtn" class="btn-ghost">Export</button>
+      <button id="deleteModeBtn" class="btn-ghost btn-danger">Delete</button>
+    </div>
+
+    <div class="footer-nav">
+      <a href="https://github.com/yyzrever/2FA" target="_blank">GitHub</a>
+      <span class="footer-dot">·</span>
+      <a id="donateLink" href="#">Donate</a>
+      <span class="footer-dot">·</span>
+      <a id="privacyLink" href="#">Privacy</a>
+    </div>
+  </div>
+
+  <div id="donateView" class="overlay-view hidden">
+    <div class="overlay-header">
+      <button class="back-btn" id="donateBack">← Back</button>
+      <div class="overlay-title">Donate</div>
+    </div>
+    <div class="overlay-body">
+      <p class="donate-desc">Support this free open source project with crypto.</p>
+      <div class="coin-grid" id="coinGrid">
+        <button class="coin-btn" data-coin="BTC">BTC</button>
+        <button class="coin-btn" data-coin="ETH">ETH</button>
+        <button class="coin-btn" data-coin="USDT">USDT</button>
+        <button class="coin-btn" data-coin="USDC">USDC</button>
+        <button class="coin-btn" data-coin="SOL">SOL</button>
+        <button class="coin-btn" data-coin="TRX">TRX</button>
+        <button class="coin-btn" data-coin="BNB">BNB</button>
+        <button class="coin-btn" data-coin="LTC">LTC</button>
+        <button class="coin-btn" data-coin="POL">POL</button>
+      </div>
+      <div class="chain-wrap hidden" id="chainWrap">
+        <div class="chain-label">Select network</div>
+        <div class="chain-grid" id="chainGrid">
+          <button class="chain-btn" data-chain="ERC20">ERC20</button>
+          <button class="chain-btn" data-chain="BEP20">BEP20</button>
+          <button class="chain-btn" data-chain="TRC20">TRC20</button>
+          <button class="chain-btn" data-chain="SOL">SOL</button>
+          <button class="chain-btn" data-chain="POL">POL</button>
+        </div>
+      </div>
+      <div class="address-wrap hidden" id="addressWrap">
+        <div class="address-label" id="addressLabel"></div>
+        <img id="addressQR" class="qr-image hidden" src="" alt="QR Code" />
+        <div class="address-box-wrap">
+          <div class="address-box" id="addressBox"></div>
+          <button class="address-copy-btn" id="copyAddressBtn" title="Copy">⎘</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="privacyView" class="overlay-view hidden">
+    <div class="overlay-header">
+      <button class="back-btn" id="privacyBack">← Back</button>
+      <div class="overlay-title">Privacy</div>
+    </div>
+    <div class="overlay-body privacy-body">
+      <div class="privacy-item">
+        <div class="privacy-icon">🔒</div>
+        <div>
+          <div class="privacy-title">No data collected</div>
+          <div class="privacy-text">We collect absolutely nothing. No analytics, no telemetry, no crash reports.</div>
+        </div>
+      </div>
+      <div class="privacy-item">
+        <div class="privacy-icon">📱</div>
+        <div>
+          <div class="privacy-title">Stored locally only</div>
+          <div class="privacy-text">Your 2FA secrets are stored in <code>chrome.storage.local</code> on your device only.</div>
+        </div>
+      </div>
+      <div class="privacy-item">
+        <div class="privacy-icon">🌐</div>
+        <div>
+          <div class="privacy-title">No network requests</div>
+          <div class="privacy-text">This extension never makes any network requests. Everything runs 100% offline.</div>
+        </div>
+      </div>
+      <div class="privacy-item">
+        <div class="privacy-icon">👁️</div>
+        <div>
+          <div class="privacy-title">No third parties</div>
+          <div class="privacy-text">No ads, no trackers, no third-party SDKs of any kind.</div>
+        </div>
+      </div>
+      <div class="opensource-badge">
+        <span>⭐ Fully Open Source</span>
+        <a href="https://github.com/yyzrever/2FA" target="_blank">View on GitHub →</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="jsQR.js"></script>
+  <script src="totp.js"></script>
+  <script src="storage.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "2FA Authenticator",
+  "version": "1.0",
+  "description": "TOTP authenticator",
+  "permissions": ["storage", "clipboardWrite"],
+  "icons": {
+    "128": "icon.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "128": "icon.png"
+    }
+  },
+  "web_accessible_resources": [{
+    "resources": ["jsQR.js"],
+    "matches": ["<all_urls>"]
+  }]
+}
